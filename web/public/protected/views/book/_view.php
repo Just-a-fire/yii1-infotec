@@ -4,7 +4,7 @@
 ?>
 
 <?php
-$fields = ['first_name', 'last_name', 'patronymic'];
+$fields = ['first_name', 'patronymic', 'last_name'];
 $relationData = [];
 foreach ($data->authors as $authors) {
     $relationDatum = array_reduce(
