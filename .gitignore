@@ -1,0 +1,24 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# PhpStorm
+.idea/*
+
+.vscode/*
+!.vscode/launch.json
+
+.env
+.env.local
+.env.*.local
+!.env.example.local
+
+composer.phar
+composer.lock
+
+web/vendor
+web/public/protected/vendor
+web/public/protected/runtime/*
+
+web/public/assets/*
+!web/public/assets/.gitkeep

@@ -1,0 +1,6 @@
+{
+    "require": {
+        "yiisoft/yii": "^1.1.15",
+        "biblys/isbn": "~3.0"
+    }
+}

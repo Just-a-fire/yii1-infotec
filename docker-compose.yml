@@ -1,0 +1,79 @@
+
+services:
+  app:
+    build:
+      context: ./docker/php
+      args:
+        PHP_VERSION: ${PHP_VERSION}
+    # это работает для внедрения переменных в среду окружения уже запущенного контенера, но для под подстановки в docker-compose.yml 
+    env_file:
+      - .env
+      - .env.local
+    container_name: ${COMPOSE_PROJECT_NAME}_app
+    working_dir: /var/www
+    volumes:
+      - ./web:/var/www
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - web-network
+      - internal-network
+
+  webserver:
+    image: nginx:alpine
+    env_file: .env
+    container_name: ${COMPOSE_PROJECT_NAME}_webserver
+    working_dir: /var/www
+    volumes:
+      - ./web:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./etc/nginx/log:/var/log/nginx
+    ports:
+      - "${NGINX_PORT:-8080}:80"
+    depends_on:
+      app:
+        condition: service_started
+    
+    networks:
+      - web-network
+
+  db:
+    image: mysql:5.7
+    container_name: ${COMPOSE_PROJECT_NAME}_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Europe/Moscow
+    volumes:
+      - db_data:/var/lib/mysql
+      - db_config:/etc/mysql/my.cnf
+    # убрать из прода
+    ports:
+      - "8806:3306"
+    healthcheck:
+      test: "mysqladmin ping -h localhost -u root -p${MYSQL_ROOT_PASSWORD}"
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      # start_period: 3s
+
+    networks:
+      - internal-network
+
+networks:
+  web-network:
+    name: ${COMPOSE_PROJECT_NAME}_web
+    internal: false
+  internal-network:
+    name: ${COMPOSE_PROJECT_NAME}_internal
+    # false на проде
+    internal: false
+
+volumes:
+  db_data:
+  db_config:
