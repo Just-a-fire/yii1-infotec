@@ -28,7 +28,7 @@ class AuthorController extends Controller
     {
         return array(
             array('allow',  // allow all users to perform 'billboard', 'subscription', 'index' and 'view' actions
-                'actions'=>array('index','view', 'billboard', 'subscription'),
+                'actions'=>array('index','view', 'billboard', 'subscription', 'cache'),
                 'users'=>array('*'),
             ),
             array('allow', // allow authenticated user to perform 'create', 'update', 'admin' and 'delete' actions
@@ -155,6 +155,7 @@ class AuthorController extends Controller
     {
         $year = $_POST['YearForm']['year'] ?? $id;
         if ($year) {
+            // TODO: refresh cache
             $dataProvider = Author::model()->findTopOfYear($year);
             $this->render('billboard', [
                 'dataProvider'=> $dataProvider,

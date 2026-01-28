@@ -85,18 +85,9 @@ class Author extends CActiveRecord
         ));
     }
 
-    public static function findTopOfYear($year)
+    public static function findTopOfYear(int $year)
     {
-        $authors = Yii::app()->db->createCommand()
-            ->select('a.id, first_name, last_name, patronymic, count(b.id) AS booksCount')
-            ->from('author a')
-            ->join('author_book ab', 'a.id = ab.author_id')
-            ->join('book b', 'b.id = ab.book_id')
-            ->where('release_year = :release_year', [':release_year' => $year])
-            ->group('a.id')
-            ->order('booksCount DESC')
-            ->limit(self::BILLBOARD_SIZE)
-            ->queryAll();
+        $authors = self::findTopOfYearCache($year);
         $dataProvider = new CArrayDataProvider($authors, [
             'id' => 'author',
             'sort' => [
@@ -107,6 +98,31 @@ class Author extends CActiveRecord
             // 'pagination' => ['pageSize' => 10],
         ]);
         return $dataProvider;
+    }
+
+    public static function findTopOfYearCache(int $year) {
+        $redisHelper = new RedisHelper();
+        $cachedAuthors = $redisHelper->getArray('billboard');
+        if (count($cachedAuthors) === 0) {
+            return self::findTopOfYearDb($year);
+        }
+        return array_map(function ($item) {
+            return json_decode($item, true);
+
+        }, $cachedAuthors);
+    }
+
+    public static function findTopOfYearDb(int $year) {
+        return Yii::app()->db->createCommand()
+            ->select('a.id, first_name, last_name, patronymic, count(b.id) AS booksCount')
+            ->from('author a')
+            ->join('author_book ab', 'a.id = ab.author_id')
+            ->join('book b', 'b.id = ab.book_id')
+            ->where('release_year = :release_year', [':release_year' => $year])
+            ->group('a.id')
+            ->order('booksCount DESC')
+            ->limit(self::BILLBOARD_SIZE)
+            ->queryAll();
     }
 
     /**
