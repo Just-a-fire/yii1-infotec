@@ -49,13 +49,13 @@ class m260128_051704_insert_new_books extends CDbMigration
 
 	public function safeDown()
 	{
-		$newBooks = require_once(Yii::getPathOfAlias('application.migrations.data.books') . $this->getMigrationPrefix() . '.php');
+		$newBooks = file_get_contents(Yii::getPathOfAlias('application.migrations.data.books') . '_' . $this->getMigrationPrefix() . '.json');
 		$newBooks = json_decode($newBooks, true);
 
 		foreach ($newBooks as $book) {
 			$this->delete(
 				self::TABLE_NAME,
-				'isbn = :isnb',
+				'isbn = :isbn',
 				[':isbn' => $book['isbn']]
 			);
 		}
