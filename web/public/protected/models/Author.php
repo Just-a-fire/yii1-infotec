@@ -6,6 +6,14 @@ class Author extends CActiveRecord
      * @var int BILLBOARD SIZE
      */
     const BILLBOARD_SIZE = 10;
+    /**
+     * @var string billboard key in redis
+     */
+    const BILLBOARD_CACHE_KEY = 'billboard';
+    /**
+     * @var int billboard TTL
+     */
+    const BILLBOARD_CACHE_TTL = 3600 * 24;
 
     /**
      * @return string the associated database table name
@@ -85,7 +93,7 @@ class Author extends CActiveRecord
         ));
     }
 
-    public static function findTopOfYear(int $year)
+    public static function findTopOfYear(int $year): CArrayDataProvider
     {
         $authors = self::findTopOfYearCache($year);
         $dataProvider = new CArrayDataProvider($authors, [
@@ -100,19 +108,20 @@ class Author extends CActiveRecord
         return $dataProvider;
     }
 
-    public static function findTopOfYearCache(int $year) {
-        $redisHelper = new RedisHelper();
-        $cachedAuthors = $redisHelper->getArray('billboard');
-        if (count($cachedAuthors) === 0) {
-            return self::findTopOfYearDb($year);
-        }
-        return array_map(function ($item) {
-            return json_decode($item, true);
-
-        }, $cachedAuthors);
+    public static function findTopOfYearCache(int $year): array
+    {
+        $yearCacheKey = self::BILLBOARD_CACHE_KEY . ':' . $year;
+        $cachedAuthors = RedisHelper::getArray($yearCacheKey);
+        if (count($cachedAuthors)) {
+            return array_map(fn($item) => json_decode($item, true), $cachedAuthors);
+        }        
+        $authors = self::findTopOfYearDb($year);
+        RedisHelper::setArray($yearCacheKey, $authors, self::BILLBOARD_CACHE_TTL);
+        return $authors;        
     }
 
-    public static function findTopOfYearDb(int $year) {
+    public static function findTopOfYearDb(int $year): array
+    {
         return Yii::app()->db->createCommand()
             ->select('a.id, first_name, last_name, patronymic, count(b.id) AS booksCount')
             ->from('author a')

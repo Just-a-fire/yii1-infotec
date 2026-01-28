@@ -2,32 +2,30 @@
 
 class RedisHelper
 {
-    /*
-    * @var CRedisCache
-    */
-    private $_cache;
-    
-    public function __construct()
+    private static function cache(): CRedisCache
     {
-        $this->_cache = Yii::app()->cache;
-        if (!$this->_cache) throw new Exception('Для работы с классом нужно подключение к кешу');
+        return Yii::app()->cache;
+    }
+    private static function prefix(): string
+    {
+        return Yii::app()->cache->keyPrefix;
     }
 
-    public function setArray($collectionKey, array $arr)
+    public static function setArray($collectionKey, array $arr, int $ttl = -1)
     {
         $args = [];
         foreach ($arr as $key => $item) {
             $args = [...$args, $key, is_array($item) ? json_encode($item) : $item];
         }
-        $this->_cache->executeCommand('HMSET', [$collectionKey, ...$args]);
-        // Yii::app()->cache->executeCommand('hmset', [$key, 'key1', 'val1', 'key2', 'val2']);
+        static::cache()->executeCommand('HMSET', [$collectionKey, ...$args]);
+        if ($ttl > 0) static::cache()->executeCommand('EXPIRE', [$collectionKey, $ttl]);
     }
 
-    public function getArray(string $key): array
+    public static function getArray(string $key): array
     {
-        $fields = $this->_cache->executeCommand('HGETALL', [$key]);
+        $fields = static::cache()->executeCommand('HGETALL', [$key]);
         $associative = [];
-        for ($i = 0; $i < count($fields); $i+=2) {
+        for ($i = 0; $i < count($fields); $i += 2) {
             $associative [$fields[$i]] = $fields[$i + 1];
         }
         return $associative;
