@@ -3,6 +3,11 @@
 class Author extends CActiveRecord
 {
     /**
+     * @var int BILLBOARD SIZE
+     */
+    const BILLBOARD_SIZE = 10;
+
+    /**
      * @return string the associated database table name
      */
     public function tableName()
@@ -90,6 +95,7 @@ class Author extends CActiveRecord
             ->where('release_year = :release_year', [':release_year' => $year])
             ->group('a.id')
             ->order('booksCount DESC')
+            ->limit(self::BILLBOARD_SIZE)
             ->queryAll();
         $dataProvider = new CArrayDataProvider($authors, [
             'id' => 'author',
