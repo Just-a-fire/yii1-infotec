@@ -22,3 +22,5 @@ web/public/protected/runtime/*
 
 web/public/assets/*
 !web/public/assets/.gitkeep
+
+etc/nginx/log/*
