@@ -153,14 +153,14 @@ class Book extends CActiveRecord
     private function updateAuthors()
     {
         // Удаление существующих связей
-        AuthorBook::model()->deleteAll('book_id = :book_id', array(':book_id' => $this->id));
+        AuthorBook::model()->deleteAll('book_id = :book_id', [':book_id' => $this->id]);
         
         if (is_array($this->authorIds)) { 
             foreach ($this->authorIds as $authorId) {
-                $postCategory = new AuthorBook();
-                $postCategory->book_id = $this->id;
-                $postCategory->author_id = $authorId;
-                $postCategory->save();
+                $AuthorBook = new AuthorBook();
+                $AuthorBook->book_id = $this->id;
+                $AuthorBook->author_id = $authorId;
+                $AuthorBook->save();
             }
         }
     }
