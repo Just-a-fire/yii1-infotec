@@ -10,8 +10,7 @@ class m260128_051704_insert_new_books extends CDbMigration
 
 	public function safeUp()
 	{
-		$newBooks = file_get_contents(Yii::getPathOfAlias('application.migrations.data.books') . '_' . $this->getMigrationPrefix() . '.json');
-		$newBooks = json_decode($newBooks, true);
+		$newBooks = $this->getNewBooks();
 
 		foreach ($newBooks as $book) {
 			$author = array_pop($book); // author в отличии от предыдущей миграции книг только строковый тип
@@ -35,7 +34,7 @@ class m260128_051704_insert_new_books extends CDbMigration
 
 			try {
 				$this->insert(self::TABLE_NAME, $book);
-				$bookId = Yii::app()->db->getLastInsertID();
+				$bookId = $this->getDbConnection()->getLastInsertID();
 				
 				$this->insert(
 					self::RELATION_TABLE_NAME,
@@ -49,8 +48,7 @@ class m260128_051704_insert_new_books extends CDbMigration
 
 	public function safeDown()
 	{
-		$newBooks = file_get_contents(Yii::getPathOfAlias('application.migrations.data.books') . '_' . $this->getMigrationPrefix() . '.json');
-		$newBooks = json_decode($newBooks, true);
+		$newBooks = $this->getNewBooks();
 
 		foreach ($newBooks as $book) {
 			$this->delete(
@@ -61,5 +59,10 @@ class m260128_051704_insert_new_books extends CDbMigration
 		}
 
 		$this->restoreAutoincrement(self::TABLE_NAME, count($newBooks));
+	}
+
+	private function getNewBooks(): array {
+		$newBooks = file_get_contents(Yii::getPathOfAlias('application.migrations.data.books') . '_' . $this->getMigrationPrefix() . '.json');
+		return json_decode($newBooks, true);
 	}
 }
