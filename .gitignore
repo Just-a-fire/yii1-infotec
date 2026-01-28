@@ -24,3 +24,4 @@ web/public/assets/*
 !web/public/assets/.gitkeep
 
 etc/nginx/log/*
+!etc/nginx/log/.gitkeep
