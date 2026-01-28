@@ -45,6 +45,7 @@ class Book extends CActiveRecord
             array('release_year', 'numerical', 'min' => 1901, 'max' => date('Y'), 'integerOnly' => true),
             array('summary', 'length', 'max'=>2024),
             array('isbn', 'length', 'max' => 17),
+            array('isbn', 'unique'),
             array('isbn', 'isbn', 'size' => 13),
             array('photo', 'length', 'max'=>255),
             // array(['title', 'summary', 'isbn', 'photo'], 'trim'),
@@ -90,7 +91,8 @@ class Book extends CActiveRecord
         $value = $this->$attribute;
         $size = $params['size'] ?: '13';
         try {
-            if ($size == '10') {
+            // если размер указан явно или количество цифр не больше 10
+            if ($size == '10' || mb_strlen(preg_replace('/[^\d]/', '', $value)) <= 10) {
                 Isbn::validateAsIsbn10($value);
             } else {
                 Isbn::validateAsIsbn13($value);
